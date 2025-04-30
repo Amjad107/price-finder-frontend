@@ -1,9 +1,39 @@
 
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, ShoppingBag } from "lucide-react";
+import { Search, ShoppingBag, LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 const Header = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check for user session on component mount
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+    };
+    
+    checkUser();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    // Cleanup subscription
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
     <header className="border-b bg-white">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -34,9 +64,17 @@ const Header = () => {
             <Search className="h-4 w-4" />
             <span>Search</span>
           </Button>
-          <Link to="/login">
-            <Button size="sm">Login</Button>
-          </Link>
+          
+          {user ? (
+            <Button onClick={handleSignOut} size="sm" variant="outline" className="flex gap-2">
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </Button>
+          ) : (
+            <Link to="/login">
+              <Button size="sm">Login</Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>
