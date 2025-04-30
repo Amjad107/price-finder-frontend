@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, ShoppingBag, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 const Header = () => {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for user session on component mount
@@ -32,6 +33,7 @@ const Header = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    navigate('/'); // Navigate to home page after signing out
   };
 
   return (
